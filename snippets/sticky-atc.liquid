@@ -72,7 +72,7 @@
 						{%- capture qty_input_class -%}
 							mr-2.5 lg:mr-5 lg:flex {% unless product.has_only_default_variant %}hidden{% endunless %}
 						{%- endcapture -%}
-						{% render 'product-qty-input', class: qty_input_class, product_form_id: product_form_id %}
+                                                {% render 'product-qty-input', class: qty_input_class, product_form_id: product_form_id, show_double_qty_btn: show_double_qty_btn %}
 		
 						{%- liquid 
 							assign btn_class = 'sf__btn-primary'
