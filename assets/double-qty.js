@@ -7,6 +7,31 @@
   var BUTTON_CLASS = 'double-qty-btn';
   var BUTTON_ARIA = 'Dublează cantitatea';
 
+  // Setează valoarea minimă definită în data-min-qty
+  function applyMinQty(){
+    document.querySelectorAll('[data-min-qty]').forEach(function(input){
+      var min = parseInt(input.getAttribute('data-min-qty'), 10);
+      if(min && min > 0){
+        input.value = min;
+        input.min = min;
+        input.step = min;
+      }
+    });
+  }
+
+  function adjustQuantity(input, delta){
+    var step = parseInt(input.getAttribute('data-min-qty'), 10) || 1;
+    var min = parseInt(input.min, 10) || step;
+    var max = input.max ? parseInt(input.max, 10) : Infinity;
+    var val = parseInt(input.value, 10) || min;
+    var newVal = val + delta * step;
+    if(newVal < min) newVal = min;
+    if(newVal > max) newVal = max;
+    input.value = newVal;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
   // Helper: Găsește inputul de cantitate din același container cu butonul
   function findQtyInput(btn) {
     // Caută inputul înainte de buton (poți adapta dacă structura ta e alta)
@@ -45,21 +70,10 @@
       updateBtnState();
       input.addEventListener('input', updateBtnState);
 
-      // Click: dublează cantitatea
+      // Click: adaugă pasul minim
       btn.addEventListener('click', function(e){
         e.preventDefault();
-        var max = input.max ? parseInt(input.max, 10) : 9999;
-        var val = parseInt(input.value, 10) || 1;
-        var doubled = val * 2;
-        if (doubled > max) {
-          input.value = max;
-          btn.disabled = true;
-        } else {
-          input.value = doubled;
-          if (doubled === max) btn.disabled = true;
-        }
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        input.dispatchEvent(new Event('change', { bubbles: true }));
+        adjustQuantity(input, 1);
         updateBtnState();
       });
 
@@ -69,11 +83,39 @@
     });
   }
 
+  function initQuantityButtons(){
+    document.querySelectorAll('[data-quantity-selector="increase"]').forEach(function(btn){
+      if(btn.dataset.stepApplied) return;
+      btn.dataset.stepApplied = '1';
+      var input = findQtyInput(btn);
+      if(!input) return;
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        adjustQuantity(input, 1);
+      });
+    });
+    document.querySelectorAll('[data-quantity-selector="decrease"]').forEach(function(btn){
+      if(btn.dataset.stepApplied) return;
+      btn.dataset.stepApplied = '1';
+      var input = findQtyInput(btn);
+      if(!input) return;
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        adjustQuantity(input, -1);
+      });
+    });
+  }
+
   // Rulează la pageload și la re-render (dacă ai AJAX sau Shopify section load)
-  document.addEventListener('DOMContentLoaded', initDoubleQtyButtons);
-  window.addEventListener('shopify:section:load', initDoubleQtyButtons);
-  window.addEventListener('shopify:cart:updated', initDoubleQtyButtons);
-  window.addEventListener('shopify:product:updated', initDoubleQtyButtons);
+  function initAll(){
+    applyMinQty();
+    initDoubleQtyButtons();
+    initQuantityButtons();
+  }
+  document.addEventListener('DOMContentLoaded', initAll);
+  window.addEventListener('shopify:section:load', initAll);
+  window.addEventListener('shopify:cart:updated', initAll);
+  window.addEventListener('shopify:product:updated', initAll);
 
   // Expune global pentru debugging manual
   window.doubleQtyInit = initDoubleQtyButtons;
