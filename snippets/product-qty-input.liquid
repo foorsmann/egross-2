@@ -1,5 +1,5 @@
 <div class="flex gap-2 w-full">
-<quantity-input class="quantity-input h-[46px] flex border border-color-border rounded flex-1 {{ class }}" data-product-id="{{ product.id }}">
+<quantity-input class="quantity-input h-[46px] flex w-full border border-color-border rounded flex-1 {{ class }}" data-product-id="{{ product.id }}">
     <button
         class="quantity-input__button flex items-center justify-center h-[46px] w-[46px]"
         type="button"
@@ -34,7 +34,7 @@
 </quantity-input>
 
 <button type="button"
-    class="double-qty-btn sf__btn sf__btn-secondary flex-1"
+    class="double-qty-btn sf__btn sf__btn-secondary flex-1 max-w-[160px]"
     aria-label="Dublează cantitatea"
     data-double-qty>
     Dublează
