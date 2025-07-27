@@ -70,7 +70,7 @@
       updateBtnState();
       input.addEventListener('input', updateBtnState);
 
-      // Click: adaugă pasul minim
+      // Click: adaugă pasul minim (acum la fel ca plus-ul)
       btn.addEventListener('click', function(e){
         e.preventDefault();
         adjustQuantity(input, 1);
@@ -120,4 +120,5 @@
   // Expune global pentru debugging manual
   window.doubleQtyInit = initDoubleQtyButtons;
 })();
+
 
