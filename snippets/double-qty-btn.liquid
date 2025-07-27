@@ -1,8 +1,18 @@
 {% comment %}Double quantity button snippet{% endcomment %}
 
+{% comment %}
+  Button to add the minimum quantity defined for the product or line item.
+{% endcomment %}
+{% assign min_qty = 1 %}
+{% if product %}
+  {% assign min_qty = product.metafields.custom.minimum_quantity | default: 1 %}
+{% elsif item %}
+  {% assign min_qty = item.product.metafields.custom.minimum_quantity | default: 1 %}
+{% endif %}
 <button type="button"
         class="double-qty-btn sf__btn sf__btn-secondary"
-        aria-label="Dublează cantitatea"
+        aria-label="Adaugă {{ min_qty }}"
         data-double-qty>
-    Dublează
+    Adaugă {{ min_qty }}
 </button>
+
