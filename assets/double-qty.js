@@ -1,11 +1,12 @@
 // double-qty.js - Doar funcționalitate, fără injectare buton
 // Autor: Saga Media / Egross
-// Asigură funcționalitatea "Dublează" pe orice buton cu clasa .double-qty-btn EXISTENT în pagină
+// Asigură funcționalitatea butonului care adaugă cantitatea minimă (pasul minim) pe orice element cu clasa .double-qty-btn existent în pagină
 
 (function(){
   // Configurări
   var BUTTON_CLASS = 'double-qty-btn';
-  var BUTTON_ARIA = 'Dublează cantitatea';
+  var LABEL_PREFIX = 'Adaugă ';
+  var LABEL_SUFFIX = ' de bucăți';
 
   // Setează valoarea minimă definită în data-min-qty
   function applyMinQty(){
@@ -34,18 +35,14 @@
 
   // Helper: Găsește inputul de cantitate din același container cu butonul
   function findQtyInput(btn) {
-    // Caută inputul înainte de buton (poți adapta dacă structura ta e alta)
     let wrapper = btn.previousElementSibling;
     if (wrapper && wrapper.classList && wrapper.classList.contains('quantity-input')) {
-      // Dacă există un input în wrapper
       let input = wrapper.querySelector('input[type="number"]');
       if (input) return input;
     }
-    // Dacă nu e găsit, mai încearcă direct înainte de buton
     if (btn.previousElementSibling && btn.previousElementSibling.tagName === 'INPUT') {
       return btn.previousElementSibling;
     }
-    // Sau caută în tot părintele
     return btn.parentNode.querySelector('input[type="number"]');
   }
 
@@ -55,11 +52,13 @@
       // Nu atașa de mai multe ori!
       if (btn.dataset.doubleQtyActive) return;
       btn.dataset.doubleQtyActive = '1';
-      btn.setAttribute('aria-label', BUTTON_ARIA);
 
-      // Găsește inputul asociat
       var input = findQtyInput(btn);
       if (!input) return;
+      var min = parseInt(input.getAttribute('data-min-qty'), 10) || 1;
+      var label = LABEL_PREFIX + min + LABEL_SUFFIX;
+      btn.setAttribute('aria-label', label);
+      btn.textContent = label;
 
       // Update vizual și stare
       function updateBtnState() {
@@ -70,14 +69,13 @@
       updateBtnState();
       input.addEventListener('input', updateBtnState);
 
-      // Click: adaugă pasul minim (acum la fel ca plus-ul)
+      // Click: adaugă pasul minim (la fel ca la butonul plus)
       btn.addEventListener('click', function(e){
         e.preventDefault();
         adjustQuantity(input, 1);
         updateBtnState();
       });
 
-      // Focus vizual
       btn.addEventListener('focus', function(){ btn.classList.add('focus'); });
       btn.addEventListener('blur', function(){ btn.classList.remove('focus'); });
     });
