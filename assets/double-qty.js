@@ -1,12 +1,12 @@
 // double-qty.js - Doar funcționalitate, fără injectare buton
 // Autor: Saga Media / Egross
-// Asigură funcționalitatea butonului care adaugă cantitatea minimă pe orice element cu clasa .double-qty-btn existent în pagină
+// Asigură funcționalitatea butonului care adaugă cantitatea minimă (pasul minim) pe orice element cu clasa .double-qty-btn existent în pagină
 
 (function(){
   // Configurări
   var BUTTON_CLASS = 'double-qty-btn';
-  var LABEL_PREFIX = 'Adauga ';
-  var LABEL_SUFFIX = ' de bucati';
+  var LABEL_PREFIX = 'Adaugă ';
+  var LABEL_SUFFIX = ' de bucăți';
 
   // Setează valoarea minimă definită în data-min-qty
   function applyMinQty(){
@@ -35,18 +35,14 @@
 
   // Helper: Găsește inputul de cantitate din același container cu butonul
   function findQtyInput(btn) {
-    // Caută inputul înainte de buton (poți adapta dacă structura ta e alta)
     let wrapper = btn.previousElementSibling;
     if (wrapper && wrapper.classList && wrapper.classList.contains('quantity-input')) {
-      // Dacă există un input în wrapper
       let input = wrapper.querySelector('input[type="number"]');
       if (input) return input;
     }
-    // Dacă nu e găsit, mai încearcă direct înainte de buton
     if (btn.previousElementSibling && btn.previousElementSibling.tagName === 'INPUT') {
       return btn.previousElementSibling;
     }
-    // Sau caută în tot părintele
     return btn.parentNode.querySelector('input[type="number"]');
   }
 
@@ -73,14 +69,13 @@
       updateBtnState();
       input.addEventListener('input', updateBtnState);
 
-      // Click: adaugă pasul minim
+      // Click: adaugă pasul minim (la fel ca la butonul plus)
       btn.addEventListener('click', function(e){
         e.preventDefault();
         adjustQuantity(input, 1);
         updateBtnState();
       });
 
-      // Focus vizual
       btn.addEventListener('focus', function(){ btn.classList.add('focus'); });
       btn.addEventListener('blur', function(){ btn.classList.remove('focus'); });
     });
@@ -123,4 +118,6 @@
   // Expune global pentru debugging manual
   window.doubleQtyInit = initDoubleQtyButtons;
 })();
+
+
 
