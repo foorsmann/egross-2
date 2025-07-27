@@ -1,4 +1,5 @@
 /* Stiluri pentru butonul "Dublează" cantitate, responsive, focus, acțiune principală */
+/* Width is handled via Tailwind classes (flex-1 max-w-[160px]) */
 
 /* double-qty.css - Stiluri pentru butonul "Dublează" cantitate
 Autor: Saga Media / Egross
@@ -8,7 +9,7 @@ Descriere: Stiluri responsive, accesibile, preia stilul principal al butoanelor 
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-left: 0.5em;
+  margin-left: 0;
   padding: 0.5em 1.2em;
   font-size: 1em;
   font-weight: 500;
