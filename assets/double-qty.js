@@ -7,6 +7,17 @@
   var BUTTON_CLASS = 'double-qty-btn';
   var BUTTON_ARIA = 'Dublează cantitatea';
 
+  // Setează valoarea minimă definită în data-min-qty
+  function applyMinQty(){
+    document.querySelectorAll('[data-min-qty]').forEach(function(input){
+      var min = parseInt(input.getAttribute('data-min-qty'), 10);
+      if(min && min > 0){
+        input.value = min;
+        input.min = min;
+      }
+    });
+  }
+
   // Helper: Găsește inputul de cantitate din același container cu butonul
   function findQtyInput(btn) {
     // Caută inputul înainte de buton (poți adapta dacă structura ta e alta)
@@ -70,10 +81,14 @@
   }
 
   // Rulează la pageload și la re-render (dacă ai AJAX sau Shopify section load)
-  document.addEventListener('DOMContentLoaded', initDoubleQtyButtons);
-  window.addEventListener('shopify:section:load', initDoubleQtyButtons);
-  window.addEventListener('shopify:cart:updated', initDoubleQtyButtons);
-  window.addEventListener('shopify:product:updated', initDoubleQtyButtons);
+  function initAll(){
+    applyMinQty();
+    initDoubleQtyButtons();
+  }
+  document.addEventListener('DOMContentLoaded', initAll);
+  window.addEventListener('shopify:section:load', initAll);
+  window.addEventListener('shopify:cart:updated', initAll);
+  window.addEventListener('shopify:product:updated', initAll);
 
   // Expune global pentru debugging manual
   window.doubleQtyInit = initDoubleQtyButtons;

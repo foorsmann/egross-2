@@ -14,10 +14,11 @@
         class="quantity-input__element w-10 text-center flex-grow shrink appearance-none"
         type="number"
         name="quantity"
-        value="1"
-        min="1"
+        value="{{ product.metafields.custom.minimum_quantity | default: 1 }}"
+        min="{{ product.metafields.custom.minimum_quantity | default: 1 }}"
         aria-label="{{ 'products.product.product_quantity' | t }}"
         data-quantity-input
+        data-min-qty="{{ product.metafields.custom.minimum_quantity | default: 1 }}"
         data-product-id="{{ product.id }}"
         form="{{ product_form_id }}"
     >
