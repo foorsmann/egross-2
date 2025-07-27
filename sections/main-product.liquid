@@ -140,7 +140,9 @@
   </div>
 
   {% if section.settings.use_sticky_atc or section.settings.use_sticky_atc_on_mobile %}
-    {% render 'sticky-atc', section: section, product: product, first_3d_model: first_3d_model %}
+    {%- assign buy_buttons_block = section.blocks | where: 'type', 'buy_buttons' | first -%}
+    {%- assign show_double_btn = buy_buttons_block.settings.show_double_qty_btn | default: false -%}
+    {% render 'sticky-atc', section: section, product: product, first_3d_model: first_3d_model, show_double_qty_btn: show_double_btn %}
   {% endif %}
 </div>
 
