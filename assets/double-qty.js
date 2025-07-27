@@ -1,98 +1,81 @@
-// double-qty.js - Buton "Dublează" cantitate pentru Shopify
+// double-qty.js - Doar funcționalitate, fără injectare buton
 // Autor: Saga Media / Egross
-// Descriere: Inserează automat butonul "Dublează" lângă inputul de cantitate pe pagini de produs, coș, quick add. Modular, robust, fără duplicări sau buguri. Textul butonului se poate modifica rapid din variabila BUTTON_TEXT.
+// Asigură funcționalitatea "Dublează" pe orice buton cu clasa .double-qty-btn EXISTENT în pagină
 
 (function(){
-  // Textul butonului - modifică aici dacă vrei alt text
-  var BUTTON_TEXT = 'Dublează';
+  // Configurări
   var BUTTON_CLASS = 'double-qty-btn';
   var BUTTON_ARIA = 'Dublează cantitatea';
 
-  // Selector pentru inputurile de cantitate (static și generate dinamic)
-  var QTY_SELECTORS = [
-    'input[type="number"][name*="quantity"]',
-    'input[type="number"][id*="quantity"]',
-    'input[type="number"][class*="quantity"]',
-    'input[type="number"][name*="qty"]',
-    'input[type="number"][id*="qty"]',
-    'input[type="number"][class*="qty"]'
-  ];
-
-  // Detectează bundle-uri/variante complexe (exclude)
-  function isBundleOrComplex(input) {
-    var form = input.closest('form');
-    if (!form) return false;
-    var bundle = form.querySelector('[data-bundle], .bundle, .product-bundle');
-    var complex = form.querySelector('.variant-complex, [data-complex]');
-    return !!(bundle || complex);
+  // Helper: Găsește inputul de cantitate din același container cu butonul
+  function findQtyInput(btn) {
+    // Caută inputul înainte de buton (poți adapta dacă structura ta e alta)
+    let wrapper = btn.previousElementSibling;
+    if (wrapper && wrapper.classList && wrapper.classList.contains('quantity-input')) {
+      // Dacă există un input în wrapper
+      let input = wrapper.querySelector('input[type="number"]');
+      if (input) return input;
+    }
+    // Dacă nu e găsit, mai încearcă direct înainte de buton
+    if (btn.previousElementSibling && btn.previousElementSibling.tagName === 'INPUT') {
+      return btn.previousElementSibling;
+    }
+    // Sau caută în tot părintele
+    return btn.parentNode.querySelector('input[type="number"]');
   }
 
-  // Inserează butonul "Dublează" lângă inputul de cantitate
-  function insertDoubleBtn(input) {
-    if (!input || input.dataset.doubleQtyAttached) return;
-    if (isBundleOrComplex(input)) return;
-    // Evită duplicarea
-    var next = input.nextElementSibling;
-    if (next && next.classList && next.classList.contains(BUTTON_CLASS)) return;
-    // Creează butonul
-    var btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = BUTTON_CLASS;
-    btn.textContent = BUTTON_TEXT;
-    btn.setAttribute('aria-label', BUTTON_ARIA);
-    btn.tabIndex = 0;
-    // Eveniment click
-    btn.addEventListener('click', function(e){
-      e.preventDefault();
-      var max = input.max ? parseInt(input.max,10) : 9999;
-      var val = parseInt(input.value,10) || 1;
-      var doubled = val * 2;
-      if (doubled > max) {
-        input.value = max;
-        btn.disabled = true;
-      } else {
-        input.value = doubled;
-        // Dacă atinge maximul, dezactivează butonul
-        if (doubled === max) btn.disabled = true;
+  // Aplică funcționalitatea pe toate butoanele existente la pageload + re-render
+  function initDoubleQtyButtons() {
+    document.querySelectorAll('.' + BUTTON_CLASS).forEach(function(btn){
+      // Nu atașa de mai multe ori!
+      if (btn.dataset.doubleQtyActive) return;
+      btn.dataset.doubleQtyActive = '1';
+      btn.setAttribute('aria-label', BUTTON_ARIA);
+
+      // Găsește inputul asociat
+      var input = findQtyInput(btn);
+      if (!input) return;
+
+      // Update vizual și stare
+      function updateBtnState() {
+        var max = input.max ? parseInt(input.max, 10) : 9999;
+        var val = parseInt(input.value, 10) || 1;
+        btn.disabled = val >= max;
       }
-      input.dispatchEvent(new Event('change', { bubbles: true }));
-    });
-    // Focus style
-    btn.addEventListener('focus', function(){ btn.classList.add('focus'); });
-    btn.addEventListener('blur', function(){ btn.classList.remove('focus'); });
-    // Marchează inputul ca având buton
-    input.dataset.doubleQtyAttached = '1';
-    // Inserează butonul imediat după input
-    input.parentNode.insertBefore(btn, input.nextSibling);
-  }
+      updateBtnState();
+      input.addEventListener('input', updateBtnState);
 
-  // Caută și inserează butoane pe toate zonele relevante
-  function scanAndInsert() {
-    QTY_SELECTORS.forEach(function(sel){
-      document.querySelectorAll(sel).forEach(function(input){
-        insertDoubleBtn(input);
+      // Click: dublează cantitatea
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        var max = input.max ? parseInt(input.max, 10) : 9999;
+        var val = parseInt(input.value, 10) || 1;
+        var doubled = val * 2;
+        if (doubled > max) {
+          input.value = max;
+          btn.disabled = true;
+        } else {
+          input.value = doubled;
+          if (doubled === max) btn.disabled = true;
+        }
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        updateBtnState();
       });
+
+      // Focus vizual
+      btn.addEventListener('focus', function(){ btn.classList.add('focus'); });
+      btn.addEventListener('blur', function(){ btn.classList.remove('focus'); });
     });
   }
 
-  // Observă modificări în DOM pentru inputuri generate dinamic
-  var observer = new MutationObserver(function(){
-    scanAndInsert();
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
+  // Rulează la pageload și la re-render (dacă ai AJAX sau Shopify section load)
+  document.addEventListener('DOMContentLoaded', initDoubleQtyButtons);
+  window.addEventListener('shopify:section:load', initDoubleQtyButtons);
+  window.addEventListener('shopify:cart:updated', initDoubleQtyButtons);
+  window.addEventListener('shopify:product:updated', initDoubleQtyButtons);
 
-  // Inițial, la pageload
-  document.addEventListener('DOMContentLoaded', scanAndInsert);
-  // Pentru AJAX/SPA, la fiecare re-render
-  window.addEventListener('shopify:section:load', scanAndInsert);
-  window.addEventListener('shopify:cart:updated', scanAndInsert);
-  window.addEventListener('shopify:product:updated', scanAndInsert);
-
-  // Expune funcția global pentru debug/ajustări
-  window.doubleQtyScan = scanAndInsert;
-
-  // Documentație rapidă:
-  // - Modifică BUTTON_TEXT pentru alt text
-  // - Stilurile sunt în double-qty.css
-  // - Poți apela window.doubleQtyScan() manual dacă ai zone custom
+  // Expune global pentru debugging manual
+  window.doubleQtyInit = initDoubleQtyButtons;
 })();
+
