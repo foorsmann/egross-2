@@ -70,7 +70,7 @@
       updateBtnState();
       input.addEventListener('input', updateBtnState);
 
-      // Click: adaugă pasul minim
+      // Click: adaugă pasul minim (acum ca la plus, nu dublează)
       btn.addEventListener('click', function(e){
         e.preventDefault();
         adjustQuantity(input, 1);
