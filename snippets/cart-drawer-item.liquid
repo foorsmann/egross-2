@@ -108,7 +108,12 @@
             name="updates[]"
             data-id="{{- item.key -}}"
             value="{{- item.quantity -}}"
-            min="0"
+            min="{{ item.product.metafields.custom.minimum_quantity | default: 1 }}"
+            step="{{ item.product.metafields.custom.minimum_quantity | default: 1 }}"
+            data-min-qty="{{ item.product.metafields.custom.minimum_quantity | default: 1 }}"
+            {% if item.variant.inventory_management == 'shopify' and item.variant.inventory_policy != 'continue' %}
+              max="{{ item.variant.inventory_quantity }}" data-max-qty="{{ item.variant.inventory_quantity }}"
+            {% endif %}
           />
           <button class="scd-item__btn" data-id="{{- item.key -}}" data-qty-change="inc">+</button>
         </div>

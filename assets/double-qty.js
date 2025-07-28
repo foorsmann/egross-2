@@ -11,6 +11,11 @@
 
   function showWarning(input, max){
     var target = input.closest('.prod__form-error') || input.parentNode;
+    // Remove any previous notification (to avoid duplicates)
+    if(target) {
+      var prev = target.querySelector('.notification');
+      if(prev) prev.remove();
+    }
     if(window.ConceptSGMTheme && ConceptSGMTheme.Notification){
       ConceptSGMTheme.Notification.show({
         target: target,
@@ -52,6 +57,23 @@
     input.value = newVal;
     input.dispatchEvent(new Event('input', { bubbles: true }));
     input.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  // Asigură că valoarea introdusă manual rămâne între min și max
+  function enforceInputLimits(input){
+    var step = parseInt(input.getAttribute('data-min-qty'), 10) || 1;
+    var min = parseInt(input.min, 10) || step;
+    var max = input.max ? parseInt(input.max, 10) : Infinity;
+    var val = parseInt(input.value, 10);
+    if(isNaN(val)) val = min;
+    if(val < min) val = min;
+    if(val > max){
+      val = max;
+      if(max !== Infinity){
+        showWarning(input, max);
+      }
+    }
+    input.value = val;
   }
 
   // Helper: Găsește inputul de cantitate din același container cu butonul
@@ -125,11 +147,44 @@
     });
   }
 
+  // watch manual input changes to keep values within range
+  function initQtyInputs(){
+    document.querySelectorAll('[data-quantity-input]').forEach(function(input){
+      if(input.dataset.limitApplied) return;
+      input.dataset.limitApplied = '1';
+      ['change','blur'].forEach(function(ev){
+        input.addEventListener(ev, function(){ enforceInputLimits(input); });
+      });
+    });
+  }
+
+  // Prevent submitting forms with quantity above stock
+  function initAtcForms(){
+    document.querySelectorAll('form[data-type="add-to-cart-form"]').forEach(function(form){
+      if(form.dataset.stockBound) return;
+      form.dataset.stockBound = '1';
+      form.addEventListener('submit', function(e){
+        var input = form.querySelector('[data-quantity-input]');
+        if(!input) return;
+        enforceInputLimits(input);
+        var max = input.max ? parseInt(input.max,10) : Infinity;
+        var val = parseInt(input.value,10) || 0;
+        if(val > max){
+          e.preventDefault();
+          showWarning(input, max);
+          input.value = max;
+        }
+      });
+    });
+  }
+
   // Rulează la pageload și la re-render (dacă ai AJAX sau Shopify section load)
   function initAll(){
     applyMinQty();
     initDoubleQtyButtons();
     initQuantityButtons();
+    initQtyInputs();
+    initAtcForms();
   }
   document.addEventListener('DOMContentLoaded', initAll);
   window.addEventListener('shopify:section:load', initAll);
@@ -139,6 +194,7 @@
   // Expune global pentru debugging manual
   window.doubleQtyInit = initDoubleQtyButtons;
 })();
+
 
 
 

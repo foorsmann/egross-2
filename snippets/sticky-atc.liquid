@@ -74,7 +74,7 @@
             {% render 'product-qty-input',
               class: qty_input_class,
               product_form_id: product_form_id,
-              show_double_qty_btn: section.settings.show_double_qty_btn
+              show_double_qty_btn: st.show_double_qty_btn
             %}
             {%- liquid
               assign btn_class = 'sf__btn-primary'
@@ -104,5 +104,6 @@
     </sticky-atc>
   </div>
 </div>
+
 
 

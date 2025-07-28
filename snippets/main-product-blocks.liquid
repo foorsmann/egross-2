@@ -322,15 +322,15 @@
                       </label>
                     {% endif %}
                     <div class="flex flex-wrap items-end">
-                      {% if block.settings.show_quantity_selector %}
-                        <div class="form__input-wrapper form__input-wrapper--select mr-5 w-32" data-quantity-input-wrapper>
-                          <label class="prod__option-label font-medium md:hidden">
-                            {{ 'products.product.quantity' | t }}
-                          </label>
-{% render 'product-qty-input', product_form_id: product_form_id, show_double_qty_btn: block.settings.show_double_qty_btn %}
+{% if block.settings.show_quantity_selector %}
+  <div class="form__input-wrapper form__input-wrapper--select mr-5 w-32" data-quantity-input-wrapper>
+    <label class="prod__option-label font-medium md:hidden">
+      {{ 'products.product.quantity' | t }}
+    </label>
+    {% render 'product-qty-input', product_form_id: product_form_id, show_double_qty_btn: block.settings.show_double_qty_btn %}
+  </div>
+{% endif %}
 
-                        </div>
-                      {% endif %}
                       {% if block.settings.show_atc_button %}
                         {% liquid
                           assign btn_class = 'sf__btn-primary'

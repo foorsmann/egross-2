@@ -3,6 +3,7 @@
 {% assign min_qty = 1 %}
 {% assign stock = 0 %}
 {% assign show_btn = false %}
+
 {% if product %}
   {% assign variant = product.selected_or_first_available_variant %}
   {% assign min_qty = product.metafields.custom.minimum_quantity | default: 1 %}
@@ -28,3 +29,4 @@
     Plus {{ min_qty }} bucăți
   </button>
 {% endif %}
+
