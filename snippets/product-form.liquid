@@ -8,15 +8,6 @@
   - enable_dynamic_checkout: {Boolean} Show the dynamic checkout button (optional)
   - show_quantity_selector: {Boolean} Show the quantity selector (optional)
   - show_instant_quantity: {Boolean} Show instant quantity buttons after submitting the form (optional)
-
-  Usage:
-  {% render 'product-form',
-    section_id: section.id,
-    product: product,
-    current_variant: product.selected_or_first_available_variant,
-    enable_dynamic_checkout: section.settings.enable_dynamic_checkout,
-    show_quantity_selector: section.settings.show_quantity_selector,
-  %}
 {% endcomment %}
 
 {%- liquid 
@@ -77,7 +68,7 @@
                 <label class="prod__option-label font-medium md:hidden">
                   {{ 'products.product.quantity' | t }}
                 </label>
-                {% render 'product-qty-input', product_form_id: product_form_id, show_double_qty_btn: block.settings.show_double_qty_btn %}
+                {% render 'product-qty-input', product_form_id: product_form_id, show_double_qty_btn: section.settings.show_double_qty_btn %}
               </div>
             {% endif %}
             {% if enableCardButton %}
@@ -103,7 +94,7 @@
             %}
             {% if enable_dynamic_checkout and is_preorder == false %}
               <div
-                class="prod__dynamic_checkout buy-one-click{% if block.settings.show_atc_button %} w-full mt-5{% else %} flex-1{% endif %}"
+                class="prod__dynamic_checkout buy-one-click{% if section.settings.show_atc_button %} w-full mt-5{% else %} flex-1{% endif %}"
                 {% if show_terms %}
                   data-terms-action disabled
                 {% endif %}
@@ -118,3 +109,5 @@
     </product-form>
   </div>
 </div>
+
+

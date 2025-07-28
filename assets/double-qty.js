@@ -1,13 +1,13 @@
 // double-qty.js - Doar funcționalitate, fără injectare buton
 // Autor: Saga Media / Egross
-// Asigură funcționalitatea butonului care adaugă cantitatea minimă pe orice element cu clasa .double-qty-btn existent în pagină
+// Asigură funcționalitatea butonului care adaugă cantitatea minimă (pasul minim) pe orice element cu clasa .double-qty-btn existent în pagină
 
 (function(){
   // Configurări
   var BUTTON_CLASS = 'double-qty-btn';
   var LABEL_PREFIX = 'Plus ';
-  var LABEL_SUFFIX = ' buc\u0103\u021bi';
-  var NOT_ENOUGH_MSG = (window.ConceptSGMStrings && window.ConceptSGMStrings.not_enough_item_message) || 'Stoc insuficient, s-au ad\u0103ugat doar __inventory_quantity__ buc\u0103\u021bi';
+  var LABEL_SUFFIX = ' bucăți';
+  var NOT_ENOUGH_MSG = (window.ConceptSGMStrings && window.ConceptSGMStrings.not_enough_item_message) || 'Stoc insuficient, s-au adăugat doar __inventory_quantity__ bucăți';
 
   function showWarning(input, max){
     var target = input.closest('.prod__form-error') || input.parentNode;
@@ -18,6 +18,9 @@
         type: 'warning',
         message: NOT_ENOUGH_MSG.replace('__inventory_quantity__', max)
       });
+    } else {
+      // fallback basic alert
+      alert(NOT_ENOUGH_MSG.replace('__inventory_quantity__', max));
     }
   }
 
@@ -53,18 +56,14 @@
 
   // Helper: Găsește inputul de cantitate din același container cu butonul
   function findQtyInput(btn) {
-    // Caută inputul înainte de buton (poți adapta dacă structura ta e alta)
     let wrapper = btn.previousElementSibling;
     if (wrapper && wrapper.classList && wrapper.classList.contains('quantity-input')) {
-      // Dacă există un input în wrapper
       let input = wrapper.querySelector('input[type="number"]');
       if (input) return input;
     }
-    // Dacă nu e găsit, mai încearcă direct înainte de buton
     if (btn.previousElementSibling && btn.previousElementSibling.tagName === 'INPUT') {
       return btn.previousElementSibling;
     }
-    // Sau caută în tot părintele
     return btn.parentNode.querySelector('input[type="number"]');
   }
 
@@ -91,14 +90,13 @@
       updateBtnState();
       input.addEventListener('input', updateBtnState);
 
-      // Click: adaugă pasul minim
+      // Click: adaugă pasul minim (la fel ca la butonul plus)
       btn.addEventListener('click', function(e){
         e.preventDefault();
         adjustQuantity(input, 1);
         updateBtnState();
       });
 
-      // Focus vizual
       btn.addEventListener('focus', function(){ btn.classList.add('focus'); });
       btn.addEventListener('blur', function(){ btn.classList.remove('focus'); });
     });
@@ -141,4 +139,7 @@
   // Expune global pentru debugging manual
   window.doubleQtyInit = initDoubleQtyButtons;
 })();
+
+
+
 
