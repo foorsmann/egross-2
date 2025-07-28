@@ -1,11 +1,75 @@
 // double-qty.js - Doar funcționalitate, fără injectare buton
 // Autor: Saga Media / Egross
-// Asigură funcționalitatea "Dublează" pe orice buton cu clasa .double-qty-btn EXISTENT în pagină
+// Asigură funcționalitatea butonului care adaugă cantitatea minimă pe orice element cu clasa .double-qty-btn existent în pagină
 
 (function(){
   // Configurări
   var BUTTON_CLASS = 'double-qty-btn';
-  var BUTTON_ARIA = 'Dublează cantitatea';
+  var LABEL_PREFIX = 'Plus ';
+  var LABEL_SUFFIX = ' buc\u0103\u021bi';
+  var NOT_ENOUGH_MSG = (window.ConceptSGMStrings && window.ConceptSGMStrings.not_enough_item_message) || 'Stoc insuficient, s-au ad\u0103ugat doar __inventory_quantity__ buc\u0103\u021bi';
+
+  function showWarning(input, max){
+    var target = input.closest('.prod__form-error') || input.parentNode;
+    // remove any previous notification inside target to avoid duplicates
+    var prev = target.querySelector('.notification');
+    if(prev) prev.remove();
+    if(window.ConceptSGMTheme && ConceptSGMTheme.Notification){
+      ConceptSGMTheme.Notification.show({
+        target: target,
+        method: 'appendChild',
+        type: 'warning',
+        message: NOT_ENOUGH_MSG.replace('__inventory_quantity__', max)
+      });
+    }
+  }
+
+  // Setează valoarea minimă definită în data-min-qty
+  function applyMinQty(){
+    document.querySelectorAll('[data-min-qty]').forEach(function(input){
+      var min = parseInt(input.getAttribute('data-min-qty'), 10);
+      if(min && min > 0){
+        input.value = min;
+        input.min = min;
+        input.step = min;
+      }
+    });
+  }
+
+  function adjustQuantity(input, delta){
+    var step = parseInt(input.getAttribute('data-min-qty'), 10) || 1;
+    var min = parseInt(input.min, 10) || step;
+    var max = input.max ? parseInt(input.max, 10) : Infinity;
+    var val = parseInt(input.value, 10) || min;
+    var newVal = val + delta * step;
+    if(newVal < min) newVal = min;
+    if(newVal > max){
+      newVal = max;
+      if(delta > 0 && max !== Infinity){
+        showWarning(input, max);
+      }
+    }
+    input.value = newVal;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  // Ensure value stays within min and max even when typed manually
+  function enforceInputLimits(input){
+    var step = parseInt(input.getAttribute('data-min-qty'), 10) || 1;
+    var min = parseInt(input.min, 10) || step;
+    var max = input.max ? parseInt(input.max, 10) : Infinity;
+    var val = parseInt(input.value, 10);
+    if(isNaN(val)) val = min;
+    if(val < min) val = min;
+    if(val > max){
+      val = max;
+      if(max !== Infinity){
+        showWarning(input, max);
+      }
+    }
+    input.value = val;
+  }
 
   // Helper: Găsește inputul de cantitate din același container cu butonul
   function findQtyInput(btn) {
@@ -30,11 +94,13 @@
       // Nu atașa de mai multe ori!
       if (btn.dataset.doubleQtyActive) return;
       btn.dataset.doubleQtyActive = '1';
-      btn.setAttribute('aria-label', BUTTON_ARIA);
 
-      // Găsește inputul asociat
       var input = findQtyInput(btn);
       if (!input) return;
+      var min = parseInt(input.getAttribute('data-min-qty'), 10) || 1;
+      var label = LABEL_PREFIX + min + LABEL_SUFFIX;
+      btn.setAttribute('aria-label', label);
+      btn.textContent = label;
 
       // Update vizual și stare
       function updateBtnState() {
@@ -45,21 +111,10 @@
       updateBtnState();
       input.addEventListener('input', updateBtnState);
 
-      // Click: dublează cantitatea
+      // Click: adaugă pasul minim
       btn.addEventListener('click', function(e){
         e.preventDefault();
-        var max = input.max ? parseInt(input.max, 10) : 9999;
-        var val = parseInt(input.value, 10) || 1;
-        var doubled = val * 2;
-        if (doubled > max) {
-          input.value = max;
-          btn.disabled = true;
-        } else {
-          input.value = doubled;
-          if (doubled === max) btn.disabled = true;
-        }
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        input.dispatchEvent(new Event('change', { bubbles: true }));
+        adjustQuantity(input, 1);
         updateBtnState();
       });
 
@@ -69,11 +124,72 @@
     });
   }
 
+  function initQuantityButtons(){
+    document.querySelectorAll('[data-quantity-selector="increase"], [data-qty-change="inc"]').forEach(function(btn){
+      if(btn.dataset.stepApplied) return;
+      btn.dataset.stepApplied = '1';
+      var input = findQtyInput(btn);
+      if(!input) return;
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        adjustQuantity(input, 1);
+      });
+    });
+    document.querySelectorAll('[data-quantity-selector="decrease"], [data-qty-change="dec"]').forEach(function(btn){
+      if(btn.dataset.stepApplied) return;
+      btn.dataset.stepApplied = '1';
+      var input = findQtyInput(btn);
+      if(!input) return;
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        adjustQuantity(input, -1);
+      });
+    });
+  }
+
+  // watch manual input changes to keep values within range
+  function initQtyInputs(){
+    document.querySelectorAll('[data-quantity-input]').forEach(function(input){
+      if(input.dataset.limitApplied) return;
+      input.dataset.limitApplied = '1';
+      ['change','blur'].forEach(function(ev){
+        input.addEventListener(ev, function(){ enforceInputLimits(input); });
+      });
+    });
+  }
+
+  // Prevent submitting forms with quantity above stock
+  function initAtcForms(){
+    document.querySelectorAll('form[data-type="add-to-cart-form"]').forEach(function(form){
+      if(form.dataset.stockBound) return;
+      form.dataset.stockBound = '1';
+      form.addEventListener('submit', function(e){
+        var input = form.querySelector('[data-quantity-input]');
+        if(!input) return;
+        enforceInputLimits(input);
+        var max = input.max ? parseInt(input.max,10) : Infinity;
+        var val = parseInt(input.value,10) || 0;
+        if(val > max){
+          e.preventDefault();
+          showWarning(input, max);
+          input.value = max;
+        }
+      });
+    });
+  }
+
   // Rulează la pageload și la re-render (dacă ai AJAX sau Shopify section load)
-  document.addEventListener('DOMContentLoaded', initDoubleQtyButtons);
-  window.addEventListener('shopify:section:load', initDoubleQtyButtons);
-  window.addEventListener('shopify:cart:updated', initDoubleQtyButtons);
-  window.addEventListener('shopify:product:updated', initDoubleQtyButtons);
+  function initAll(){
+    applyMinQty();
+    initDoubleQtyButtons();
+    initQuantityButtons();
+    initQtyInputs();
+    initAtcForms();
+  }
+  document.addEventListener('DOMContentLoaded', initAll);
+  window.addEventListener('shopify:section:load', initAll);
+  window.addEventListener('shopify:cart:updated', initAll);
+  window.addEventListener('shopify:product:updated', initAll);
 
   // Expune global pentru debugging manual
   window.doubleQtyInit = initDoubleQtyButtons;
