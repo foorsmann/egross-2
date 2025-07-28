@@ -68,9 +68,6 @@
                 <label class="prod__option-label font-medium md:hidden">
                   {{ 'products.product.quantity' | t }}
                 </label>
-                {% comment %}
-                  FOLOSEȘTE PARAMETRUL CORECT DIN SECTION, NU BLOCK!
-                {% endcomment %}
                 {% render 'product-qty-input', product_form_id: product_form_id, show_double_qty_btn: section.settings.show_double_qty_btn %}
               </div>
             {% endif %}
@@ -112,4 +109,5 @@
     </product-form>
   </div>
 </div>
+
 

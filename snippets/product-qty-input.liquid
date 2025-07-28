@@ -1,4 +1,8 @@
 {% comment %}Quantity selector and optional "Add minimum quantity" button{% endcomment %}
+{% assign variant = product.selected_or_first_available_variant %}
+{% assign min_qty = product.metafields.custom.minimum_quantity | default: 1 %}
+{% assign stock = variant.inventory_quantity | default: 0 %}
+
 <div class="flex gap-2 w-full">
   <quantity-input class="quantity-input h-[46px] flex border border-color-border rounded flex-1 {{ class }}" data-product-id="{{ product.id }}">
     <button
@@ -15,11 +19,13 @@
         class="quantity-input__element w-10 text-center flex-grow shrink appearance-none"
         type="number"
         name="quantity"
-        value="{{ product.metafields.custom.minimum_quantity | default: 1 }}"
-        min="{{ product.metafields.custom.minimum_quantity | default: 1 }}"
+        value="{{ min_qty }}"
+        min="{{ min_qty }}"
+        step="{{ min_qty }}"
         aria-label="{{ 'products.product.product_quantity' | t }}"
         data-quantity-input
-        data-min-qty="{{ product.metafields.custom.minimum_quantity | default: 1 }}"
+        data-min-qty="{{ min_qty }}"
+        {% if stock > 0 %}max="{{ stock }}" data-max-qty="{{ stock }}"{% endif %}
         data-product-id="{{ product.id }}"
         form="{{ product_form_id }}"
     >
@@ -35,8 +41,7 @@
     </button>
   </quantity-input>
 
-  {%- if show_double_qty_btn != false -%}
-    {%- assign min_qty = product.metafields.custom.minimum_quantity | default: 1 -%}
+  {%- if show_double_qty_btn and min_qty > 1 and stock > 0 and variant.available -%}
     <button type="button"
         class="double-qty-btn sf__btn sf__btn-secondary flex-1 max-w-[160px]"
         aria-label="Adaugă {{ min_qty }} de bucăți"

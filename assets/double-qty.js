@@ -5,8 +5,24 @@
 (function(){
   // Configurări
   var BUTTON_CLASS = 'double-qty-btn';
-  var LABEL_PREFIX = 'Adaugă ';
-  var LABEL_SUFFIX = ' de bucăți';
+  var LABEL_PREFIX = 'Plus ';
+  var LABEL_SUFFIX = ' bucăți';
+  var NOT_ENOUGH_MSG = (window.ConceptSGMStrings && window.ConceptSGMStrings.not_enough_item_message) || 'Stoc insuficient, s-au adăugat doar __inventory_quantity__ bucăți';
+
+  function showWarning(input, max){
+    var target = input.closest('.prod__form-error') || input.parentNode;
+    if(window.ConceptSGMTheme && ConceptSGMTheme.Notification){
+      ConceptSGMTheme.Notification.show({
+        target: target,
+        method: 'appendChild',
+        type: 'warning',
+        message: NOT_ENOUGH_MSG.replace('__inventory_quantity__', max)
+      });
+    } else {
+      // fallback basic alert
+      alert(NOT_ENOUGH_MSG.replace('__inventory_quantity__', max));
+    }
+  }
 
   // Setează valoarea minimă definită în data-min-qty
   function applyMinQty(){
@@ -27,7 +43,12 @@
     var val = parseInt(input.value, 10) || min;
     var newVal = val + delta * step;
     if(newVal < min) newVal = min;
-    if(newVal > max) newVal = max;
+    if(newVal > max){
+      newVal = max;
+      if(delta > 0 && max !== Infinity){
+        showWarning(input, max);
+      }
+    }
     input.value = newVal;
     input.dispatchEvent(new Event('input', { bubbles: true }));
     input.dispatchEvent(new Event('change', { bubbles: true }));
@@ -82,7 +103,7 @@
   }
 
   function initQuantityButtons(){
-    document.querySelectorAll('[data-quantity-selector="increase"]').forEach(function(btn){
+    document.querySelectorAll('[data-quantity-selector="increase"], [data-qty-change="inc"]').forEach(function(btn){
       if(btn.dataset.stepApplied) return;
       btn.dataset.stepApplied = '1';
       var input = findQtyInput(btn);
@@ -92,7 +113,7 @@
         adjustQuantity(input, 1);
       });
     });
-    document.querySelectorAll('[data-quantity-selector="decrease"]').forEach(function(btn){
+    document.querySelectorAll('[data-quantity-selector="decrease"], [data-qty-change="dec"]').forEach(function(btn){
       if(btn.dataset.stepApplied) return;
       btn.dataset.stepApplied = '1';
       var input = findQtyInput(btn);
