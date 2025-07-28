@@ -1,11 +1,9 @@
 {% comment %}Double quantity button snippet{% endcomment %}
 
-{% comment %}
-  Button to add the minimum quantity defined for the product or line item.
-{% endcomment %}
 {% assign min_qty = 1 %}
 {% assign stock = 0 %}
 {% assign show_btn = false %}
+
 {% if product %}
   {% assign variant = product.selected_or_first_available_variant %}
   {% assign min_qty = product.metafields.custom.minimum_quantity | default: 1 %}
@@ -21,12 +19,14 @@
     {% assign show_btn = true %}
   {% endif %}
 {% endif %}
+
 {% if show_btn %}
-<button type="button"
-        class="double-qty-btn sf__btn sf__btn-secondary"
-        aria-label="Plus {{ min_qty }} bucăți"
-        data-double-qty
-        {% if item and item.quantity >= stock %}disabled{% endif %}>
+  <button type="button"
+          class="double-qty-btn sf__btn sf__btn-secondary"
+          aria-label="Plus {{ min_qty }} bucăți"
+          data-double-qty
+          {% if item and item.quantity >= stock %}disabled{% endif %}>
     Plus {{ min_qty }} bucăți
-</button>
+  </button>
 {% endif %}
+
